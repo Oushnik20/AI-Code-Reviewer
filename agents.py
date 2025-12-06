@@ -1,3 +1,12 @@
+import importlib.util, subprocess, sys
+
+# ✅ Render fix: ensure LiteLLM is preloaded
+if importlib.util.find_spec("litellm") is None:
+    print("⚠️ LiteLLM not found — installing now...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "litellm"], check=False)
+else:
+    print("✅ LiteLLM preloaded successfully")
+
 import os
 import re
 from dotenv import load_dotenv
