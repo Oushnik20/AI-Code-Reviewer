@@ -1,20 +1,22 @@
-import os, importlib.util, subprocess, sys, re
-from dotenv import load_dotenv
+import os, sys, importlib.util, subprocess
 
-# ✅ Preload env + fix provider before CrewAI import
-load_dotenv()
+# ✅ Force Groq mode BEFORE importing CrewAI
 os.environ["CREWAI_DEFAULT_LLM_PROVIDER"] = "groq"
-os.environ["CREWAI_LOG_LEVEL"] = "INFO"
+os.environ["CREWAI_DISABLE_LITELLM_FALLBACK"] = "1"
 
-# ✅ Ensure litellm exists (Render-safe)
+# ✅ Make sure LiteLLM exists (Render-safe)
 if importlib.util.find_spec("litellm") is None:
-    print("⚙️ Installing LiteLLM (Render safety fix)...")
     subprocess.run([sys.executable, "-m", "pip", "install", "litellm"], check=False)
-else:
-    print("✅ LiteLLM already present")
 
-from crewai import Agent, Task, Crew, LLM
+# ✅ Force API key into environment for Render (in case .env fails)
+from dotenv import load_dotenv
+load_dotenv()
+if not os.getenv("GROQ_API_KEY"):
+    os.environ["GROQ_API_KEY"] = "<YOUR_GROQ_API_KEY>"
+
+from crewai import LLM, Agent, Task, Crew
 from analyzer import analyze_repository
+
 
 # ✅ Initialize Groq LLM safely
 llm = LLM(
