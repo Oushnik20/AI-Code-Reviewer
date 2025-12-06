@@ -1,0 +1,12 @@
+flask==3.0.0
+flask_sqlalchemy
+gitpython==3.1.43
+pylint==3.2.6
+bandit==1.7.9
+radon==6.0.1
+fpdf==1.7.2
+crewai
+langchain_groq
+python-dotenv
+httpx
+gunicorn

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DevMate – Results</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f8fafc; margin:0; padding:40px; }
+    .container { background:white; padding:30px; border-radius:10px; max-width:800px; margin:auto; box-shadow:0 0 15px rgba(0,0,0,0.1);}
+    h1 { color:#333; }
+    .score { font-size:18px; background:#007bff; color:white; padding:8px 12px; border-radius:6px; display:inline-block; }
+    .suggestion { background:#f3f4f6; padding:10px; border-left:4px solid #007bff; margin:10px 0; border-radius:6px; }
+    a { text-decoration:none; color:white; background:#28a745; padding:8px 14px; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Analysis Completed ✅</h1>
+    <p class="score">Overall Code Health: {{ score }}/10</p>
+    <h3>AI Suggestions</h3>
+    {% for s in suggestions %}
+      <div class="suggestion">
+        <b>[{{ s.type|upper }}]</b> {{ s.file }} — line {{ s.line }}<br>
+        <i>{{ s.message }}</i><br>
+        <p>{{ s.suggestion }}</p>
+      </div>
+    {% endfor %}
+    <br><a href="{{ pdf }}">📄 Download PDF Report</a>
+  </div>
+</body>
+</html>
