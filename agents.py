@@ -10,8 +10,7 @@ else:
 import os
 import re
 from dotenv import load_dotenv
-from langchain_groq import ChatGroq
-from crewai import Agent, Task, Crew
+from crewai import Agent, Task, Crew, LLM
 from analyzer import analyze_repository
 
 # -----------------------------
@@ -19,9 +18,10 @@ from analyzer import analyze_repository
 # -----------------------------
 load_dotenv()
 
-llm = ChatGroq(
+llm = LLM(
     model="groq/meta-llama/llama-4-maverick-17b-128e-instruct",
     api_key=os.getenv("GROQ_API_KEY"),
+    provider="groq",  # ✅ tell CrewAI to use Groq directly
     temperature=0.3
 )
 
