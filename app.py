@@ -1,3 +1,13 @@
+# Force LiteLLM to preload (Render isolation fix)
+import importlib.util, sys
+
+if importlib.util.find_spec("litellm") is None:
+    print("⚠️ LiteLLM module not found — reinstalling dynamically")
+    import subprocess
+    subprocess.run([sys.executable, "-m", "pip", "install", "litellm"], check=False)
+else:
+    print("✅ LiteLLM preloaded successfully")
+
 from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
 import os
