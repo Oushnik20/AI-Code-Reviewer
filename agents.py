@@ -1,29 +1,27 @@
-import importlib.util, subprocess, sys
+import os, importlib.util, subprocess, sys, re
+from dotenv import load_dotenv
 
-# ✅ Render fix: ensure LiteLLM is preloaded
+# ✅ Preload env + fix provider before CrewAI import
+load_dotenv()
+os.environ["CREWAI_DEFAULT_LLM_PROVIDER"] = "groq"
+os.environ["CREWAI_LOG_LEVEL"] = "INFO"
+
+# ✅ Ensure litellm exists (Render-safe)
 if importlib.util.find_spec("litellm") is None:
-    print("⚠️ LiteLLM not found — installing now...")
+    print("⚙️ Installing LiteLLM (Render safety fix)...")
     subprocess.run([sys.executable, "-m", "pip", "install", "litellm"], check=False)
 else:
-    print("✅ LiteLLM preloaded successfully")
+    print("✅ LiteLLM already present")
 
-import os
-import re
-from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, LLM
 from analyzer import analyze_repository
 
-# -----------------------------
-# Load environment and LLM
-# -----------------------------
-load_dotenv()
-os.environ["CREWAI_DEFAULT_LLM_PROVIDER"] = "groq"  # ✅ essential line
-
+# ✅ Initialize Groq LLM safely
 llm = LLM(
-    provider="groq",  # ✅ tell CrewAI to use Groq
+    provider="groq",
     model="groq/meta-llama/llama-4-maverick-17b-128e-instruct",
     api_key=os.getenv("GROQ_API_KEY"),
-    temperature=0.3
+    temperature=0.3,
 )
 
 # -----------------------------
