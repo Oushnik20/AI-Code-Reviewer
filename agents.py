@@ -1,27 +1,30 @@
-import os, sys, importlib.util, subprocess
+import os, sys, subprocess, importlib.util, re
+from dotenv import load_dotenv
 
-# ✅ Force Groq mode BEFORE importing CrewAI
+# --- PREVENT CREWAI FROM USING LiteLLM ---
 os.environ["CREWAI_DEFAULT_LLM_PROVIDER"] = "groq"
 os.environ["CREWAI_DISABLE_LITELLM_FALLBACK"] = "1"
+os.environ["CREWAI_TELEMETRY_ENABLED"] = "0"
 
-# ✅ Make sure LiteLLM exists (Render-safe)
+# --- Ensure LiteLLM is installed (safely for Render) ---
 if importlib.util.find_spec("litellm") is None:
+    print("⚙️ Installing LiteLLM for CrewAI runtime...")
     subprocess.run([sys.executable, "-m", "pip", "install", "litellm"], check=False)
 
-# ✅ Force API key into environment for Render (in case .env fails)
-from dotenv import load_dotenv
+# --- Load .env for GROQ key ---
 load_dotenv()
 if not os.getenv("GROQ_API_KEY"):
-    os.environ["GROQ_API_KEY"] = "<YOUR_GROQ_API_KEY>"
+    print("⚠️ No GROQ_API_KEY found in environment — please set it in Render.")
+    os.environ["GROQ_API_KEY"] = "your_backup_key_here"  # optional fallback
 
+# --- Import only after env vars are ready ---
 from crewai import LLM, Agent, Task, Crew
 from analyzer import analyze_repository
 
-
-# ✅ Initialize Groq LLM safely
+# --- Setup LLM (direct Groq connection) ---
 llm = LLM(
     provider="groq",
-    model="groq/meta-llama/llama-4-maverick-17b-128e-instruct",
+    model="meta-llama/llama-4-maverick-17b-128e-instruct",
     api_key=os.getenv("GROQ_API_KEY"),
     temperature=0.3,
 )
