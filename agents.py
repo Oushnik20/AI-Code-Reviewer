@@ -17,11 +17,12 @@ from analyzer import analyze_repository
 # Load environment and LLM
 # -----------------------------
 load_dotenv()
+os.environ["CREWAI_DEFAULT_LLM_PROVIDER"] = "groq"  # ✅ essential line
 
 llm = LLM(
+    provider="groq",  # ✅ tell CrewAI to use Groq
     model="groq/meta-llama/llama-4-maverick-17b-128e-instruct",
     api_key=os.getenv("GROQ_API_KEY"),
-    provider="groq",  # ✅ tell CrewAI to use Groq directly
     temperature=0.3
 )
 
