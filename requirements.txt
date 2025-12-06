@@ -10,3 +10,4 @@ langchain_groq
 python-dotenv
 httpx
 gunicorn
+litellm==1.35.0
