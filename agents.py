@@ -1,3 +1,4 @@
+import patch_crewai  # must load before CrewAI imports
 import os, sys, subprocess, importlib.util, re
 from dotenv import load_dotenv
 
