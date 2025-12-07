@@ -5,10 +5,10 @@ pylint==3.2.6
 bandit==1.7.9
 radon==6.0.1
 fpdf==1.7.2
+litellm>=1.50.0
 crewai==1.6.1
 langchain_groq==1.1.0
 python-dotenv
 httpx
 gunicorn
-litellm==1.35.5
 groq==0.37.1   # ✅ add this line

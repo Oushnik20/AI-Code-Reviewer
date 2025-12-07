@@ -1,32 +1,35 @@
-import early_patch
-early_patch.patch_crewai_llm()
-import patch_crewai  # must load before CrewAI imports
 import os, sys, subprocess, importlib.util, re
 from dotenv import load_dotenv
 
-# --- Step 1: preload LiteLLM if missing ---
-if importlib.util.find_spec("litellm") is None:
-    print("⚙️ Installing LiteLLM...")
-    subprocess.run([sys.executable, "-m", "pip", "install", "litellm==1.35.5"], check=False)
+# --- Step 0: Disable CrewAI fallback early ---
+os.environ["CREWAI_DEFAULT_LLM_PROVIDER"] = "groq"
+os.environ["CREWAI_DISABLE_LITELLM_FALLBACK"] = "1"
+os.environ["CREWAI_TELEMETRY_ENABLED"] = "0"
 
-# --- Step 2: patch CrewAI *before* import ---
-import importlib.util
+# --- Step 1: Preload LiteLLM (Render-safe, correct version) ---
+if importlib.util.find_spec("litellm") is None:
+    print("⚙️ Installing LiteLLM (Render-safe)...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "litellm>=1.50.0"], check=False)
+else:
+    print("✅ LiteLLM preloaded successfully")
+
+# --- Step 2: Load .env and Groq key ---
+load_dotenv()
+if not os.getenv("GROQ_API_KEY"):
+    raise EnvironmentError("❌ Missing GROQ_API_KEY — please set it in Render.")
+
+# --- Step 3: Patch CrewAI to never rebuild LLM ---
 spec = importlib.util.find_spec("crewai.utilities.llm_utils")
 if spec:
     import importlib
     llm_utils = importlib.import_module("crewai.utilities.llm_utils")
     def safe_create_llm(obj):
-        # prevent CrewAI from rebuilding external llm
+        # Prevent CrewAI from overwriting our Groq LLM
         return obj
     llm_utils.create_llm = safe_create_llm
     print("✅ CrewAI LLM creation patched successfully")
 
-# --- Step 3: load environment ---
-load_dotenv()
-if not os.getenv("GROQ_API_KEY"):
-    raise EnvironmentError("❌ Missing GROQ_API_KEY — please set it in Render.")
-
-# --- Step 4: initialize Groq LLM ---
+# --- Step 4: Initialize Groq LLM directly ---
 from langchain_groq import ChatGroq
 llm = ChatGroq(
     model="groq/llama-3.3-70b-versatile",
@@ -35,9 +38,11 @@ llm = ChatGroq(
 )
 print("✅ Groq LLM initialized successfully")
 
-# --- Step 5: import CrewAI only now ---
+# --- Step 5: Import CrewAI AFTER patch ---
 from crewai import Agent, Task, Crew
 from analyzer import analyze_repository
+
+
 # -----------------------------
 # Helper to clean output text
 # -----------------------------

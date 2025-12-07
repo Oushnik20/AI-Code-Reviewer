@@ -1,19 +1,21 @@
-import early_patch
-early_patch.patch_crewai_llm()
-# Force LiteLLM to preload (Render isolation fix)
-import patch_crewai  # must load before CrewAI imports
-import importlib.util, sys
+# ✅ app.py (Render-ready, CrewAI stable)
+import os, sys, subprocess, importlib.util
+from dotenv import load_dotenv
+
+# --- Preload environment + LiteLLM early ---
+load_dotenv()
+os.environ["CREWAI_DEFAULT_LLM_PROVIDER"] = "groq"
+os.environ["CREWAI_DISABLE_LITELLM_FALLBACK"] = "1"
+os.environ["CREWAI_TELEMETRY_ENABLED"] = "0"
 
 if importlib.util.find_spec("litellm") is None:
-    print("⚠️ LiteLLM module not found — reinstalling dynamically")
-    import subprocess
-    subprocess.run([sys.executable, "-m", "pip", "install", "litellm"], check=False)
+    print("⚙️ Installing LiteLLM (Render-safe)...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "litellm>=1.50.0"], check=False)
 else:
     print("✅ LiteLLM preloaded successfully")
 
 from flask import Flask, render_template, request, redirect, url_for, flash
 from datetime import datetime
-import os
 from flask_sqlalchemy import SQLAlchemy
 from agents import analyze_repo_with_agents
 from reporter import generate_pdf_report
