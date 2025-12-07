@@ -1,17 +1,29 @@
 import os, sys, subprocess, importlib.util, re
 from dotenv import load_dotenv
 
-# --- Load environment ---
-load_dotenv()
-if not os.getenv("GROQ_API_KEY"):
-    raise EnvironmentError("❌ Missing GROQ_API_KEY — please set it in Render.")
-
-# --- Ensure LiteLLM is installed ---
+# --- Step 1: preload LiteLLM if missing ---
 if importlib.util.find_spec("litellm") is None:
     print("⚙️ Installing LiteLLM...")
     subprocess.run([sys.executable, "-m", "pip", "install", "litellm==1.35.5"], check=False)
 
-# --- Use Groq directly ---
+# --- Step 2: patch CrewAI *before* import ---
+import importlib.util
+spec = importlib.util.find_spec("crewai.utilities.llm_utils")
+if spec:
+    import importlib
+    llm_utils = importlib.import_module("crewai.utilities.llm_utils")
+    def safe_create_llm(obj):
+        # prevent CrewAI from rebuilding external llm
+        return obj
+    llm_utils.create_llm = safe_create_llm
+    print("✅ CrewAI LLM creation patched successfully")
+
+# --- Step 3: load environment ---
+load_dotenv()
+if not os.getenv("GROQ_API_KEY"):
+    raise EnvironmentError("❌ Missing GROQ_API_KEY — please set it in Render.")
+
+# --- Step 4: initialize Groq LLM ---
 from langchain_groq import ChatGroq
 llm = ChatGroq(
     model="groq/llama-3.3-70b-versatile",
@@ -20,15 +32,9 @@ llm = ChatGroq(
 )
 print("✅ Groq LLM initialized successfully")
 
-# --- Patch CrewAI to accept external LLMs ---
-import crewai.utilities.llm_utils as llm_utils
-def safe_create_llm(obj):
-    return obj  # just return the provided llm instance
-llm_utils.create_llm = safe_create_llm
-
+# --- Step 5: import CrewAI only now ---
 from crewai import Agent, Task, Crew
 from analyzer import analyze_repository
-
 # -----------------------------
 # Helper to clean output text
 # -----------------------------
