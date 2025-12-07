@@ -1,3 +1,5 @@
+import early_patch
+early_patch.patch_crewai_llm()
 # Force LiteLLM to preload (Render isolation fix)
 import patch_crewai  # must load before CrewAI imports
 import importlib.util, sys
