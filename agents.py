@@ -1,34 +1,29 @@
 import os, sys, subprocess, importlib.util, re
 from dotenv import load_dotenv
 
-# --- PREVENT CREWAI FROM USING LiteLLM ---
-os.environ["CREWAI_DEFAULT_LLM_PROVIDER"] = "groq"
-os.environ["CREWAI_DISABLE_LITELLM_FALLBACK"] = "1"
-os.environ["CREWAI_TELEMETRY_ENABLED"] = "0"
-
-# --- Ensure LiteLLM is installed (safely for Render) ---
-if importlib.util.find_spec("litellm") is None:
-    print("⚙️ Installing LiteLLM for CrewAI runtime...")
-    subprocess.run([sys.executable, "-m", "pip", "install", "litellm"], check=False)
-
-# --- Load .env for GROQ key ---
+# --- Load environment ---
 load_dotenv()
 if not os.getenv("GROQ_API_KEY"):
-    print("⚠️ No GROQ_API_KEY found in environment — please set it in Render.")
-    os.environ["GROQ_API_KEY"] = "your_backup_key_here"  # optional fallback
+    raise EnvironmentError("❌ Missing GROQ_API_KEY — please set it in Render.")
 
-# --- Import only after env vars are ready ---
-from crewai import LLM, Agent, Task, Crew
-from analyzer import analyze_repository
+# --- Ensure LiteLLM is installed ---
+if importlib.util.find_spec("litellm") is None:
+    print("⚙️ Installing LiteLLM...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "litellm==1.35.5"], check=False)
 
-# --- Setup LLM (direct Groq connection) ---
-llm = LLM(
-    provider="groq",
-    model="meta-llama/llama-4-maverick-17b-128e-instruct",
+# --- Use Groq directly instead of CrewAI's LLM ---
+from langchain_groq import ChatGroq
+llm = ChatGroq(
+    model="groq/llama-3.3-70b-versatile",
     api_key=os.getenv("GROQ_API_KEY"),
-    temperature=0.3,
+    temperature=0.3
 )
 
+print("✅ Groq LLM initialized successfully")
+
+# --- Import CrewAI AFTER llm is ready ---
+from crewai import Agent, Task, Crew
+from analyzer import analyze_repository
 # -----------------------------
 # Helper to clean output text
 # -----------------------------
