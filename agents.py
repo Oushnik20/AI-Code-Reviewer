@@ -11,19 +11,24 @@ if importlib.util.find_spec("litellm") is None:
     print("⚙️ Installing LiteLLM...")
     subprocess.run([sys.executable, "-m", "pip", "install", "litellm==1.35.5"], check=False)
 
-# --- Use Groq directly instead of CrewAI's LLM ---
+# --- Use Groq directly ---
 from langchain_groq import ChatGroq
 llm = ChatGroq(
     model="groq/llama-3.3-70b-versatile",
     api_key=os.getenv("GROQ_API_KEY"),
     temperature=0.3
 )
-
 print("✅ Groq LLM initialized successfully")
 
-# --- Import CrewAI AFTER llm is ready ---
+# --- Patch CrewAI to accept external LLMs ---
+import crewai.utilities.llm_utils as llm_utils
+def safe_create_llm(obj):
+    return obj  # just return the provided llm instance
+llm_utils.create_llm = safe_create_llm
+
 from crewai import Agent, Task, Crew
 from analyzer import analyze_repository
+
 # -----------------------------
 # Helper to clean output text
 # -----------------------------
