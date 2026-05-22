@@ -33,10 +33,13 @@ PDF Reports: FPDF
 Deployment: Render (Gunicorn)
 
 ⚙️ Installation (Local)
-git clone https://github.com/<your-username>/devmate.git
-cd devmate
-pip install -r requirements.txt
+```bash
+git clone https://github.com/Oushnik20/devmate.git
 
+cd devmate
+
+pip install -r requirements.txt
+```
 
 Create a .env file:
 
